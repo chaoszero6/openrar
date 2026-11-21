@@ -96,3 +96,12 @@ python -m openrar           # GUI
 python -m openrar help      # CLI
 python packaging/make_icon.py   # regenerate icons
 ```
+
+## License
+OpenRAR is released under the [MIT License](LICENSE).
+
+The Windows builds bundle third-party components under their own licenses: Qt / PySide6 (LGPL-3.0, shipped
+as separate replaceable DLLs), py7zr (LGPL-2.1+), pyzipper (MIT), rarfile (ISC), zstandard (BSD-3-Clause),
+cryptography (Apache-2.0 or BSD-3-Clause), and zlib (zlib license, statically linked into the SFX module). The RAR test files in
+`tests/data` come from the rarfile test suite (ISC license). RAR is a trademark of RARLAB; OpenRAR is not
+affiliated with RARLAB or WinRAR.
