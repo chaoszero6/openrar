@@ -37,6 +37,8 @@ def _app() -> QApplication:
         app.setOrganizationName(APP_NAME)
         app.setWindowIcon(QIcon(resource("icon.ico")))
         theme.apply(app, settings()["theme"])
+        from .launch import sanitize_process_environment
+        sanitize_process_environment()     # programs we start must not inherit the bundled Qt
     return app
 
 

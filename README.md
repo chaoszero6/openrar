@@ -33,7 +33,7 @@ fallback (it can't handle passwords). The same applies to ISO, CAB, ARJ, LZH and
 
 ## Getting it running on Windows
 
-**Download**: grab `OpenRAR-Setup-1.0.0.exe` (installer) or `OpenRAR-1.0.0-win64.zip` (portable) from the
+**Download**: grab `OpenRAR-Setup-<version>.exe` (installer) or `OpenRAR-<version>-win64.zip` (portable) from the
 [Releases](../../releases) page. The files are not code-signed, so SmartScreen may warn on first run
 (*More info → Run anyway*).
 
@@ -43,7 +43,7 @@ fallback (it can't handle passwords). The same applies to ISO, CAB, ARJ, LZH and
 2. Double-click `build.bat`. It creates a virtual environment, installs the dependencies, runs the tests and builds
    `dist\OpenRAR\` containing `OpenRAR.exe` (the app) and `orar.exe` (command line).
 3. Optional: install [NSIS 3](https://nsis.sourceforge.io) and run `build.bat` again. It then also builds
-   `dist\OpenRAR-Setup-1.0.0.exe` from `packaging\installer.nsi`, a per-user installer (no admin rights) with
+   `dist\OpenRAR-Setup-<version>.exe` from `packaging\installer.nsi`, a per-user installer (no admin rights) with
    Start-menu shortcuts, Explorer integration, optional PATH entry and an uninstaller.
    On Linux the same script builds with `makensis packaging/installer.nsi`.
 

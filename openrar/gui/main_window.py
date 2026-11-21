@@ -20,7 +20,7 @@ from ..core.formats import looks_like_archive, open_archive
 from ..core.model import CreateOptions, ExtractOptions
 from ..core.util import IS_WINDOWS, human_size, strip_archive_ext
 from ..core.writers import format_from_path
-from . import icons, theme
+from . import icons, launch, theme
 from .dialogs import AddDialog, ExtractDialog
 from .models import ArchiveIndex, FileListModel, Row, list_directory
 from .tasks import DiagnosticsDialog, GuiInteraction, run_task, show_error
@@ -29,15 +29,12 @@ from .tool_dialogs import (AboutDialog, BenchmarkDialog, CommentDialog, ConvertD
 
 
 def open_with_system(path: str):
-    if IS_WINDOWS:
-        os.startfile(path)  # noqa: S606 - opening the user's own file with its associated program
-    else:
-        QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+    launch.open_with_default_app(path)
 
 
 def reveal(path: str):
     if IS_WINDOWS:
-        subprocess.Popen(["explorer", "/select,", os.path.normpath(path)])
+        launch.popen(["explorer", "/select,", os.path.normpath(path)])
     else:
         QDesktopServices.openUrl(QUrl.fromLocalFile(os.path.dirname(path)))
 
