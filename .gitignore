@@ -1,8 +1,22 @@
+# Python
 .venv/
 __pycache__/
 *.pyc
-build/
-dist/
 .pytest_cache/
 *.orr
-sfx_stub/*.o
+
+# build output (all platforms)
+build/
+dist/
+windows/sfx_stub/*.o
+linux/.cache/
+linux/build.log
+
+# Android / Gradle
+android/.gradle/
+android/local.properties
+android/keystore.properties
+android/**/build/
+*.jks
+*.keystore
+.kotlin/

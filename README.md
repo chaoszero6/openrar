@@ -1,107 +1,58 @@
 # OpenRAR
 
-A free archive manager for Windows. It is an independent app, not affiliated with WinRAR or RARLAB. The goal was
-to match the feature set of a paid WinRAR license with open formats, with no trial period and no nag screen.
+A free archive manager for **Windows**, **Linux** and **Android**. It is an independent app, not affiliated with
+WinRAR or RARLAB. The goal is the feature set of a paid WinRAR license on open formats, with no trial period and no
+nag screen.
+
+| Folder | What it is |
+|---|---|
+| [`shared/`](shared/) | The archive engine, the `orar` command line and the Qt desktop interface, used by Windows and Linux |
+| [`windows/`](windows/) | Windows: Explorer context menu and file associations, DPAPI password storage, `.exe` SFX module, installer |
+| [`linux/`](linux/) | Linux: applications menu, MIME defaults, Dolphin / Nemo / GNOME Files menus, keyring, `.deb` package |
+| [`android/`](android/) | Android: native Kotlin app (Jetpack Compose) with its own engine on zip4j, Commons Compress and 7-Zip |
+
+Downloads for every platform are on the [Releases](../../releases) page.
 
 ## Features
 
-| | |
-|---|---|
-| **Create archives** | ZIP, 7Z, TAR, TAR.GZ, TAR.BZ2, TAR.XZ, TAR.ZST, self-extracting `.exe` |
-| **Open / extract** | everything above plus RAR (1.5 – 5, solid, multi-volume, encrypted names), ISO, CAB, ARJ, LZH, WIM, DMG, … |
-| **Compression** | 6 levels (Store → Best), methods Deflate / BZip2 / LZMA / LZMA2 / PPMd / Zstandard |
-| **Encryption** | AES-256 for ZIP and 7Z, optional file-name encryption (7Z), password organizer (DPAPI-protected) |
-| **Split volumes** | presets for e-mail, CD, FAT32, DVD, Blu-ray or any size (`name.zip.001`, `.002` …, 7-Zip compatible) |
-| **Recovery records** | parity data (`archive.orr`) that repairs damaged or truncated archives, for any format |
-| **Repair** | from recovery records, or salvage of damaged ZIPs with no recovery record |
-| **SFX** | native 100 KB Windows module: title, text, license, default path (env vars), run setup, silent, temp mode |
-| **Archive editing** | add, update, freshen, synchronize, delete, rename, edit files in place. ZIP edits copy the existing compressed data as-is, so they are fast and don't need the password |
-| **Lock / comment** | lock archives against changes, edit ZIP comments |
-| **Tools** | Find (inside archives too, including text search), Convert (batch), Benchmark, Virus scan (Microsoft Defender), HTML/TXT reports, Wizard |
-| **Explorer integration** | context menu (Add to archive…, Add to .zip, Extract files…, Extract Here, Extract to subfolder, Test) and file associations, per user, no admin needed |
-| **Interface** | WinRAR-style file manager, folder tree, drag & drop in and out, open archives inside archives, light/dark/follow-Windows themes |
-| **Command line** | `orar.exe` with rar-style commands and switches |
+| | Windows & Linux | Android |
+|---|---|---|
+| **Create** | ZIP, 7Z, TAR, TAR.GZ/BZ2/XZ/ZST, self-extracting `.exe` (Windows) and `.run` (Linux) | ZIP, 7Z, TAR, TAR.GZ/BZ2/XZ |
+| **Open / extract** | all of the above, RAR 1.5 – 5 (solid, volumes, encrypted names), ISO, CAB, ARJ, LZH, WIM, … | all of the above, RAR 1.5 – 5, split `.001` volumes, OpenRAR SFX files |
+| **Encryption** | AES-256 (ZIP and 7Z), encrypted file names (7Z), password organizer | AES-256 ZIP; opens encrypted ZIP, 7Z and RAR |
+| **Split volumes** | presets for e-mail, CD, DVD, FAT32 or any size (`name.zip.001` …, 7-Zip compatible) | same format and presets |
+| **Repair** | recovery records (`archive.orr`), salvage of damaged ZIPs | – |
+| **Editing** | add, update, freshen, sync, delete, rename, edit files in place, lock, comments | delete, rename, add (ZIP) |
+| **Tools** | find (inside archives too), convert, benchmark, virus scan, reports, wizard, test | test, info, view and share files from archives |
+| **Integration** | Explorer / file-manager context menus, file associations, drag & drop | "Open with", share sheet ("Compress with OpenRAR") |
+| **Command line** | `orar` with rar-style commands and switches | – |
+
+Archives move freely between the three: the Android engine is tested against archives made by the desktop app
+(including AES, encrypted names, volumes and both SFX types), and the desktop app against Android-made ones.
 
 ### The one thing it can't do: create `.rar` files
-RAR is a proprietary format. Only RARLAB's own software can create `.rar` archives, and the UnRAR source license
-forbids using it to build a RAR compressor. OpenRAR **opens and extracts** RAR archives. To create archives it uses
-7Z (equal or better compression) or ZIP (opens anywhere).
+RAR is a proprietary format. Only RARLAB's software may create `.rar` archives; the UnRAR license forbids using
+its code to build a RAR compressor. OpenRAR **opens and extracts** RAR everywhere. To create archives it uses 7Z
+(equal or better compression) or ZIP (opens anywhere).
 
-Listing RAR contents works on its own. Unpacking compressed RAR data uses the free
-[7-Zip](https://www.7-zip.org) or UnRAR if either is installed. Windows 10/11's built-in `tar.exe` is used as a
-fallback (it can't handle passwords). The same applies to ISO, CAB, ARJ, LZH and similar read-only formats.
+## Building
 
-## Getting it running on Windows
-
-**Download**: grab `OpenRAR-Setup-<version>.exe` (installer) or `OpenRAR-<version>-win64.zip` (portable) from the
-[Releases](../../releases) page. The files are not code-signed, so SmartScreen may warn on first run
-(*More info → Run anyway*).
-
-
-**Option A: build the .exe (recommended)**
-1. Install [Python 3.12](https://www.python.org/downloads/windows/) (64-bit) and tick *Add python.exe to PATH*.
-2. Double-click `build.bat`. It creates a virtual environment, installs the dependencies, runs the tests and builds
-   `dist\OpenRAR\` containing `OpenRAR.exe` (the app) and `orar.exe` (command line).
-3. Optional: install [NSIS 3](https://nsis.sourceforge.io) and run `build.bat` again. It then also builds
-   `dist\OpenRAR-Setup-<version>.exe` from `packaging\installer.nsi`, a per-user installer (no admin rights) with
-   Start-menu shortcuts, Explorer integration, optional PATH entry and an uninstaller.
-   On Linux the same script builds with `makensis packaging/installer.nsi`.
-
-**Option B: run from source**: double-click `run.bat`.
-
-Then open **Options → Settings → Integration** and click *Apply integration* to get the Explorer context menu.
-On Windows 11 the entries are under *Show more options* (Shift+Right-click).
-
-## Command line
+Each folder's README has the details.
 
 ```
-orar a  -m5 -p -hpSecret -v700m -rr5 -t backup.7z C:\Data      create: best, AES + hidden names, 700 MB volumes,
-                                                                 5% recovery record, test afterwards
-orar a  -sfx setup.exe C:\MyApp                                 self-extracting archive
-orar x  archive.rar D:\Out\                                     extract with paths   (e = without paths)
-orar x  -here archive.zip                                       smart "Extract Here"
-orar l  archive.7z                                              list      orar i archive.7z   information
-orar t  archive.zip                                             test      orar r archive.zip  repair
-orar d  archive.zip docs/old.txt                                delete    orar rn archive.zip a.txt b.txt
-orar c  archive.zip "comment text"                              comment   orar k archive.zip  lock
-orar rr5 archive.7z                                             add a 5% recovery record
-orar cv -fmt7z old.rar new.7z                                   convert   orar s archive.zip  make SFX
-```
-Run `orar help` for every switch. Exit codes: 0 OK, 2 error, 3 damaged/CRC errors, 255 cancelled.
-
-## SFX options
-The SFX module reads its settings from the ZIP comment (the GUI writes them for you):
-`Title=`, `Text=`, `Path=` (environment variables allowed, e.g. `%ProgramFiles%\App`), `Setup=` (run after extraction),
-`Silent=1`, `Overwrite=0|1|2` (ask / all / skip), `TempMode=1` (extract to temp, run Setup, wait, clean up), `License=`.
-At run time: `setup.exe /S` (silent) and `/D=C:\Target`.
-
-The module source is in `sfx_stub/sfx.c`. Rebuild it with `sfx_stub/build.sh` (mingw-w64 + zlib).
-
-## How some features work
-* **Recovery records** sit next to the archive as `archive.ext.orr`, so the archive itself stays readable by every
-  tool. The archive is divided into sectors with CRC32s. With *N* parity sectors (N = record size), sector *i*
-  belongs to parity group *i mod N*. Any damage that hits at most one sector per group can be rebuilt, which covers
-  a contiguous damaged block up to the record size and truncated files. Results are verified with SHA-256.
-* **Lock** stores a marker in the ZIP comment. OpenRAR then refuses changes. Other tools ignore it, as they do with
-  WinRAR locks. ZIP only.
-* **Solid** compression is always on for 7Z and TAR.* (best ratio). ZIP compresses each file on its own (fast
-  random access).
-* Settings live in `%APPDATA%\OpenRAR\settings.json`.
-
-## Development
-```
-pip install -r requirements-dev.txt
-python -m pytest            # 45 tests: all formats, encryption, volumes, recovery, repair, SFX, RAR, CLI
-python -m openrar           # GUI
-python -m openrar help      # CLI
-python packaging/make_icon.py   # regenerate icons
+shared/     python -m pytest                         engine, CLI and GUI tests (any OS)
+windows/    build.bat                                PyInstaller .exe + NSIS installer   (on Windows)
+linux/      ./build.sh   or   ./build_in_docker.sh   portable folder, .tar.gz and .deb   (on Linux)
+android/    ./gradlew assembleRelease                APK                                 (JDK 17+, Android SDK)
 ```
 
 ## License
 OpenRAR is released under the [MIT License](LICENSE).
 
-The Windows builds bundle third-party components under their own licenses: Qt / PySide6 (LGPL-3.0, shipped
-as separate replaceable DLLs), py7zr (LGPL-2.1+), pyzipper (MIT), rarfile (ISC), zstandard (BSD-3-Clause),
-cryptography (Apache-2.0 or BSD-3-Clause), and zlib (zlib license, statically linked into the SFX module). The RAR test files in
-`tests/data` come from the rarfile test suite (ISC license). RAR is a trademark of RARLAB; OpenRAR is not
-affiliated with RARLAB or WinRAR.
+The builds bundle third-party components under their own licenses: Qt / PySide6 (LGPL-3.0, shipped as separate
+replaceable libraries), py7zr (LGPL-2.1+), pyzipper (MIT), rarfile (ISC), zstandard (BSD-3-Clause), cryptography
+(Apache-2.0 or BSD-3-Clause), keyring (MIT), zlib (zlib license, statically linked into the Windows SFX module); on
+Android zip4j (Apache-2.0), Apache Commons Compress / IO / Lang (Apache-2.0), XZ for Java (public domain), junrar
+(UnRAR license) and 7-Zip-JBinding-4Android (LGPL-2.1 with the unRAR restriction; RAR decoding uses unRAR code by
+Alexander Roshal). The RAR test files in `shared/tests/data` come from the rarfile test suite (ISC license).
+RAR is a trademark of RARLAB; OpenRAR is not affiliated with RARLAB or WinRAR.
