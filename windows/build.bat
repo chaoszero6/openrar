@@ -17,7 +17,7 @@ echo Build finished: %CD%\dist\OpenRAR\OpenRAR.exe
 set "NSIS=%ProgramFiles(x86)%\NSIS\makensis.exe"
 if exist "%NSIS%" (
     "%NSIS%" packaging\installer.nsi || goto :error
-    echo Installer: %CD%\dist\OpenRAR-Setup-1.1.0.exe
+    echo Installer: %CD%\dist\OpenRAR-Setup-1.1.1.exe
 ) else (
     echo Optional installer: install NSIS 3 from https://nsis.sourceforge.io and run build.bat again.
 )

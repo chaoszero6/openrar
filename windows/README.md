@@ -5,7 +5,7 @@ The Windows app: the [shared engine and Qt interface](../shared/) plus the Windo
 * **Explorer integration** (`shell.py`): cascaded context menu (Add to archive…, Add to .zip, Extract files…,
   Extract Here, Extract to subfolder, Test) and file associations, all under `HKEY_CURRENT_USER`, so no
   administrator rights are needed and *Remove all integration* undoes everything. Selecting several files in
-  Explorer opens one window for all of them.
+  Explorer opens one window for all of them. Explorer hides the entries when more than 100 items are selected.
 * **Saved passwords** are encrypted with your Windows account (DPAPI, `dpapi.py`).
 * **Virus scan** uses Microsoft Defender (`MpCmdRun.exe`).
 * **SFX module**: `sfx_stub/` is the native C source of the self-extracting `.exe` stub (Win32 UI, zlib). The built

@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 
-from PySide6.QtCore import QByteArray, QEventLoop, QTimer
+from PySide6.QtCore import QByteArray, QDir, QLockFile
 from PySide6.QtGui import QIcon
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication, QMessageBox
@@ -39,47 +40,71 @@ def _app() -> QApplication:
 
 
 # --------------------------------------------------------------------------- Explorer multi-select collection
-def _collect(kind: str, items: list[str], wait_ms: int = 600) -> list[str] | None:
-    """Explorer starts one process per selected file. The first becomes the collector; others hand over
-    their file and exit (returning None)."""
+_ACK = b"OK"
+
+
+def _collect(kind: str, items: list[str], quiet_ms: int = 1000, give_up_ms: int = 20000) -> list[str] | None:
+    """Explorer starts one process per selected file. One becomes the collector; the others hand over
+    their file and exit (returning None).
+
+    A lock file decides who collects: "nobody is listening, so I will" is not atomic, and Windows lets
+    several processes listen on the same pipe name. A process only exits once the collector has confirmed
+    receipt; otherwise it tries again, becoming the next collector if the previous one has finished."""
     name = f"OpenRAR-{kind}-{os.environ.get('USERNAME') or os.environ.get('USER') or 'user'}"
+    lock = QLockFile(os.path.join(QDir.tempPath(), name + ".lock"))
+    lock.setStaleLockTime(0)          # only a dead owner makes the lock stale, not its age
+    deadline = time.monotonic() + give_up_ms / 1000
+    while not lock.tryLock(0):
+        if _hand_over(name, items):
+            return None
+        if time.monotonic() > deadline:
+            return items              # a second window is better than silently dropping files
+        time.sleep(0.05)
+    try:
+        return _receive(name, items, quiet_ms)
+    finally:
+        lock.unlock()
+
+
+def _hand_over(name: str, items: list[str]) -> bool:
+    """Send `items` to the collector. True only if it confirmed that it has them."""
     sock = QLocalSocket()
     sock.connectToServer(name)
-    if sock.waitForConnected(150):
-        sock.write(QByteArray("\n".join(items).encode("utf-8") + b"\0"))
-        sock.flush()
-        sock.waitForBytesWritten(1000)
-        sock.disconnectFromServer()
-        return None
+    if not sock.waitForConnected(150):
+        return False
+    sock.write(QByteArray("\n".join(items).encode("utf-8") + b"\0"))
+    sock.flush()
+    reply = b""
+    while len(reply) < len(_ACK) and sock.waitForReadyRead(3000):
+        reply += bytes(sock.readAll())
+    sock.disconnectFromServer()
+    return reply == _ACK
+
+
+def _receive(name: str, items: list[str], quiet_ms: int) -> list[str]:
+    """Collect handed-over files until none have arrived for `quiet_ms`."""
     server = QLocalServer()
-    QLocalServer.removeServer(name)
+    QLocalServer.removeServer(name)   # leftover socket of a crashed collector (Unix)
     if not server.listen(name):
         return items
-    collected = list(items)
-    buffers = {}
-
-    def on_conn():
+    collected = dict.fromkeys(items)  # ordered, without duplicates
+    deadline = time.monotonic() + quiet_ms / 1000
+    while (left := deadline - time.monotonic()) > 0:
+        server.waitForNewConnection(max(1, int(left * 1000)))
         while server.hasPendingConnections():
-            c = server.nextPendingConnection()
-            buffers[c] = b""
-
-            def read(c=c):
-                buffers[c] += bytes(c.readAll())
-                if buffers[c].endswith(b"\0"):
-                    for line in buffers[c][:-1].decode("utf-8").splitlines():
-                        if line and line not in collected:
-                            collected.append(line)
-                    deadline.start(wait_ms)       # more may still be coming
-            c.readyRead.connect(read)
-    server.newConnection.connect(on_conn)
-    loop = QEventLoop()
-    deadline = QTimer()
-    deadline.setSingleShot(True)
-    deadline.timeout.connect(loop.quit)
-    deadline.start(wait_ms)
-    loop.exec()
+            conn = server.nextPendingConnection()
+            data = bytes(conn.readAll())
+            while not data.endswith(b"\0") and conn.waitForReadyRead(2000):
+                data += bytes(conn.readAll())
+            if data.endswith(b"\0"):
+                collected.update(dict.fromkeys(x for x in data[:-1].decode("utf-8").split("\n") if x))
+                conn.write(QByteArray(_ACK))
+                conn.flush()
+                conn.waitForDisconnected(1000)   # closing first could discard the reply on Windows
+                deadline = time.monotonic() + quiet_ms / 1000       # more may still be coming
+            conn.close()
     server.close()
-    return collected
+    return list(collected)
 
 
 # --------------------------------------------------------------------------- entry points

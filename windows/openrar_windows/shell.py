@@ -15,6 +15,8 @@ from openrar.integration import verbs as _shared_verbs
 PROGID = "OpenRAR.Archive"
 ROOT = r"Software\Classes"
 MENU_KEY = "OpenRAR"
+# Without this, Explorer hides these menu entries when more than 15 items are selected ("Player": up to 100).
+MULTI = {"MultiSelectModel": "Player"}
 ARCHIVE_TYPES = [e for e in _TYPES if e != ".run"]
 
 
@@ -48,13 +50,13 @@ def install(cfg: dict, app: list[str]):
         if not verbs:
             return
         if cfg.get("cascaded"):
-            setkey(rf"{base}\shell\{MENU_KEY}", {"MUIVerb": "OpenRAR", "Icon": exe_icon, "SubCommands": ""})
+            setkey(rf"{base}\shell\{MENU_KEY}", {"MUIVerb": "OpenRAR", "Icon": exe_icon, "SubCommands": "", **MULTI})
             for key, label, _ic, cmd in verbs:
-                setkey(rf"{base}\shell\{MENU_KEY}\shell\{key}", {"MUIVerb": label, "Icon": exe_icon})
+                setkey(rf"{base}\shell\{MENU_KEY}\shell\{key}", {"MUIVerb": label, "Icon": exe_icon, **MULTI})
                 setkey(rf"{base}\shell\{MENU_KEY}\shell\{key}\command", {"": cmd})
         else:
             for key, label, _ic, cmd in verbs:
-                setkey(rf"{base}\shell\{MENU_KEY}.{key}", {"MUIVerb": label, "Icon": exe_icon})
+                setkey(rf"{base}\shell\{MENU_KEY}.{key}", {"MUIVerb": label, "Icon": exe_icon, **MULTI})
                 setkey(rf"{base}\shell\{MENU_KEY}.{key}\command", {"": cmd})
 
     add_menu(rf"{ROOT}\*", for_archives=False)
